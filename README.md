@@ -1,0 +1,2 @@
+# springmvcSecond
+这是使用了非注解的方式实现的springmvc的初步配置
