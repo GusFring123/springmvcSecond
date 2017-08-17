@@ -1,0 +1,76 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd ">
+
+
+    <!--说明：这几个组件的配置前后位置无所谓，配置它们的目的是让我们的框架来执行程序员编写的handler
+    而程序员编写的handler需要按照适配器的规则去编写，所以先配置适配器-->
+
+
+    <!--配置Handler-->
+    <!--配置handler的目的就是将handler在spring容器中加载-->
+    <bean id="itemsController1" name="/queryItems.action" class="com.gus.controller.ItemsController1"/>
+    <!--配置另外一个handler-->
+    <bean id="itemsController2" class="com.gus.controller.ItemsController2"/>
+
+
+    <!--配置处理器映射器        所有的映射器都实现HandlerMapping接口 -->
+    <!--将bean的name当作url进行映射查找（找到最终的handler）（bean就是handler，需要在配置handler时指定beanname，这个beanname就是url）
+    所以需要配置Handler-->
+    <!--配置映射器要求上面的handler的name必须要写成url-->
+    <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+
+    <!--简单url映射器配置-->
+    <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+                <prop key="/queryItems1.action">itemsController1</prop>
+                <prop key="/queryItems2.action">itemsController1</prop>
+                <prop key="/queryItems3.action">itemsController2</prop>
+            </props>
+        </property>
+    </bean>
+
+
+
+    <!--配置处理器适配器-->
+
+    <!--注意：所有的处理器适配器都实现HandlerAdapter这个接口
+    HandlerAdapter中有这个方法：boolean supports(Object var1);
+    意思就是说这个适配器支持实现哪一种接口类型的handler
+    在SimpleControllerHandlerAdapter中：
+    public boolean supports(Object handler) {
+        return handler instanceof Controller;
+    }
+    这个方法的意思就是说 SimpleControllerHandlerAdapter这个适配器能够执行实现Controller接口的handler
+    -->
+    <bean class="org.springframework.web.portlet.mvc.SimpleControllerHandlerAdapter"/>
+
+    <!--所以接下来的由我们自己写的handler（controller）需要实现controller接口才能被SimpleControllerHandlerAdapter适配器执行-->
+
+    <!--另一个适配器       要求编写的handler实现HttpRequestHandler接口-->
+    <bean class="org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter"/>
+
+<!--注意：根据自己的测试，HttpRequestHandlerAdapter不存在的时候，实现了Controller接口与实现了HttpRequestHandler接口的
+handler都可访问使用，当二者共存的时候，只有实现了HttpRequestHandler接口的handler可以访问，另一个实现了Controller接口的
+handler不能访问，当访问时会报错 No adapter for handler [com.gus.controller.ItemsController1@416e8715]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler-->
+
+
+
+
+    <!--配置视图解析器-->
+    <!--因为在这个案例中，视图用jsp来实现，所以需要配置解析jsp的视图解析器-->
+    <!--解析jsp，默认使用jstl。注意classpath下面要有jstl的包-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"/>
+</beans>
